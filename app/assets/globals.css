@@ -1,0 +1,24 @@
+@font-face {
+	font-family: "Geist";
+	src: url("/fonts/Geist-Regular.woff2") format("woff2"),
+		url("/fonts/Geist-Regular.woff") format("woff"),
+		url("/fonts/Geist-Regular.ttf") format("truetype");
+	font-weight: normal;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: "Geist";
+	src: url("/fonts/Geist-Bold.woff2") format("woff2"),
+		url("/fonts/Geist-Bold.otf") format("opentype"), /* Fix "otf" to "opentype" */
+		url("/fonts/Geist-Bold.ttf") format("truetype");
+	font-weight: bold;
+	font-style: normal;
+}
+
+body,
+html,
+* {
+	font-family: "Geist", sans-serif !important;
+}
+
