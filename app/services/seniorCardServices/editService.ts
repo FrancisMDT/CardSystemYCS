@@ -1,8 +1,9 @@
-import { SeniorCardModel } from "@/app/models/SeniorCard/seniorCardModel";
+import { YouthCardModel } from "@/app/models/SeniorCard/youthCardModel";
 
-export const editSCDataService = async (data: Partial<SeniorCardModel>): Promise<Partial<SeniorCardModel>> => {
+
+export const editSCDataService = async (data: Partial<YouthCardModel>): Promise<Partial<YouthCardModel>> => {
 console.log("data: ", data);    
-    const res = await fetch("/api/scid", {
+    const res = await fetch("/api/youthid", {
         method: "PUT",
         headers: { "Content-Type": "application/json"},
         credentials: "include",

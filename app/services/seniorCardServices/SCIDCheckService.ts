@@ -1,6 +1,6 @@
-export async function checkSCIDExists(scid: string): Promise<boolean> {
+export async function checkSCIDExists(youthid: string): Promise<boolean> {
     try {
-        const res = await fetch(`/api/scid/checkID?scid=${encodeURIComponent(scid)}`);
+        const res = await fetch(`/api/youthid/checkID?youthid=${encodeURIComponent(youthid)}`);
         const data = await res.json();
         return data.exists || false;
     } catch (err) {

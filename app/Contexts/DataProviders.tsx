@@ -1,6 +1,6 @@
 // CombinedProviders.tsx
 import { LoadingProvider } from "./LoadingContext";
-import { SeniorCardDataProvider } from "./SeniorCardContext";
+import { SeniorCardDataProvider } from "./CardContext";
 import { SnackbarProvider } from "./snackBarContext";
 import { StateProvider } from "./stateContext";
 import { UploadProvider } from "./uploadContext";

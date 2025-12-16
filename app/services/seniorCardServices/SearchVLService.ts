@@ -1,4 +1,5 @@
-import { VLSearchResult } from "@/app/models/SeniorCard/seniorCardModel";
+import { VLSearchResult } from "@/app/models/SeniorCard/youthCardModel";
+
 export const searchVLService = async (query: string): Promise<VLSearchResult[]> => {
     if (!query.trim()) return [];
 

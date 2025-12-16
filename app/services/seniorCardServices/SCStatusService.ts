@@ -2,7 +2,7 @@
 import axios from "axios";
 
 interface UpdateStatusPayload {
-    scid: string;
+    youthid: string;
     status: string;
 }
 

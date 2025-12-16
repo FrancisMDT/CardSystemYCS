@@ -11,13 +11,13 @@ import {
     TextField,
     Typography,
 } from "@mui/material";
-import { useSeniorCardDataContext } from "@/app/Contexts/SeniorCardContext";
+import { useSeniorCardDataContext } from "@/app/Contexts/CardContext";
 import MUITableBinding from "../components/MUITable";
-import { VLSearchResult } from "@/app/models/SeniorCard/seniorCardModel";
 import PersonIcon from '@mui/icons-material/Person';
 import NumbersIcon from '@mui/icons-material/Numbers';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
+import { VLSearchResult } from "@/app/models/SeniorCard/youthCardModel";
 
 interface VLSearchModalProps {
     open: boolean;

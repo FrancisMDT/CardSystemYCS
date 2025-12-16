@@ -16,7 +16,7 @@ import {
     useMediaQuery,
     useTheme,
 } from "@mui/material";
-import { useSeniorCardDataContext } from "@/app/Contexts/SeniorCardContext";
+import { useSeniorCardDataContext } from "@/app/Contexts/CardContext";
 import QRCode from "react-qrcode-logo";
 import FrontCard from "../components/FrontCard";
 import BackCard from "../components/BackCard";
@@ -39,7 +39,7 @@ export default function ViewSCModal({ open, onClose }: ViewSCModalProps) {
     const [loadingSignature, setLoadingSignature] = useState(true);
 
     useEffect(() => {
-        if (!selectedSCData?.scid) return;
+        if (!selectedSCData?.youthid) return;
 
         const fetchImageAsObjectUrl = async (baseUrl: string, exts: string[]) => {
             for (const ext of exts) {
@@ -58,12 +58,12 @@ export default function ViewSCModal({ open, onClose }: ViewSCModalProps) {
             setLoadingPhoto(true);
             setLoadingSignature(true);
 
-            const photo = await fetchImageAsObjectUrl(`/api/scpics/Images/${selectedSCData.scid}`, [
+            const photo = await fetchImageAsObjectUrl(`/api/youthpics/Images/${selectedSCData.youthid}`, [
                 "jpg",
                 "jpeg",
                 "png",
             ]);
-            const sig = await fetchImageAsObjectUrl(`/api/scpics/Signature/${selectedSCData.scid}`, [
+            const sig = await fetchImageAsObjectUrl(`/api/youthpics/Signature/${selectedSCData.youthid}`, [
                 "png",
                 "jpg",
                 "jpeg",
@@ -122,7 +122,7 @@ export default function ViewSCModal({ open, onClose }: ViewSCModalProps) {
                     >
                         {/* Left: Details */}
                         <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 1 }}>
-                            {detailItem("SCID", selectedSCData?.scid)}
+                            {detailItem("Youth ID", selectedSCData?.youthid)}
                             {detailItem("Full Name", selectedSCData?.fullName)}
                             {detailItem(
                                 "Birthdate",
@@ -131,9 +131,9 @@ export default function ViewSCModal({ open, onClose }: ViewSCModalProps) {
                                     : undefined
                             )}
                             {detailItem("Address", selectedSCData?.address)}
-                            {detailItem("Contact Person", selectedSCData?.contactPerson)}
+                            {/* {detailItem("Contact Person", selectedSCData?.contactPerson)}
                             {detailItem("Contact Number", selectedSCData?.contactNum)}
-                            {detailItem("Contact Address", selectedSCData?.contactAddress)}
+                            {detailItem("Contact Address", selectedSCData?.contactAddress)} */}
                         </Box>
 
                         {/* Right: Card Tabs */}
@@ -160,6 +160,8 @@ export default function ViewSCModal({ open, onClose }: ViewSCModalProps) {
                                                 photoUrl={photoUrl}
                                                 loadingPhoto={loadingPhoto}
                                                 operation="view"
+                                                signatureUrl={signatureUrl}
+                                                loadingSignature={loadingSignature}
                                             />
 
                                         ) : (

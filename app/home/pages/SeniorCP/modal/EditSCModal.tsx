@@ -15,7 +15,7 @@ import {
     FormControlLabel,
     Checkbox,
 } from "@mui/material";
-import { useSeniorCardDataContext } from "@/app/Contexts/SeniorCardContext";
+import { useSeniorCardDataContext } from "@/app/Contexts/CardContext";
 import FaceCropModal from "../components/imageCrop";
 import { SignatureUpload } from "../components/signatureUpload";
 import { useUpload } from "@/app/Contexts/uploadContext";
@@ -36,11 +36,11 @@ export default function EditSCModal({ open, onClose }: EditSCModalProps) {
     const { signature, setSignature, captured, setCaptured } = useStateContext();
     const { showSnackBar } = useSnackBar();
 
-    const [scidValid, setScidValid] = useState<boolean | null>(null); // null = untouched
+    const [youthidValid, setYouthidValid] = useState<boolean | null>(null); // null = untouched
 
-    // const scidLabel = selectedSCData?.scid || "unknown";
+    // const youthidLabel = selectedSCData?.youthid || "unknown";
 
-    const [scid, setScid] = useState(selectedSCData?.scid || "");
+    const [youthid, setYouthid] = useState(selectedSCData?.youthid || "");
     const [birthDate, setBirthDate] = useState("");
     const [fullName, setFullName] = useState("");
     const [address, setAddress] = useState("");
@@ -49,7 +49,7 @@ export default function EditSCModal({ open, onClose }: EditSCModalProps) {
     const [contactAddress, setContactAddress] = useState("");
 
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-    const [signaturePreview, setSignaturePreview] = useState<string | null>(null);    
+    const [signaturePreview, setSignaturePreview] = useState<string | null>(null);
 
     const [photoLoading, setPhotoLoading] = useState(false);
     const [signatureLoading, setSignatureLoading] = useState(false);
@@ -82,7 +82,7 @@ export default function EditSCModal({ open, onClose }: EditSCModalProps) {
         // Save original snapshot for revert
         setOriginalData(selectedSCData);
 
-        setScid(selectedSCData.scid || "");
+        setYouthid(selectedSCData.youthid || "");
         setBirthDate(selectedSCData.birthDate || "");
         setFullName(selectedSCData.fullName || "");
         setAddress(selectedSCData.address || "");
@@ -95,11 +95,11 @@ export default function EditSCModal({ open, onClose }: EditSCModalProps) {
             setSignatureLoading(true);
 
             const photoUrl = await fetchImageAsObjectUrl(
-                `/api/scpics/Images/${selectedSCData.scid}`,
+                `/api/youthpics/Images/${selectedSCData.youthid}`,
                 ["jpg", "jpeg", "png"]
             );
             const sigUrl = await fetchImageAsObjectUrl(
-                `/api/scpics/Signature/${selectedSCData.scid}`,
+                `/api/youthpics/Signature/${selectedSCData.youthid}`,
                 ["png", "jpg", "jpeg"]
             );
 
@@ -120,7 +120,7 @@ export default function EditSCModal({ open, onClose }: EditSCModalProps) {
         if (!originalData) return;
 
         // Reset form fields
-        setScid(originalData.scid || "");
+        setYouthid(originalData.youthid || "");
         setBirthDate(originalData.birthDate || "");
         setFullName(originalData.fullName || "");
         setAddress(originalData.address || "");
@@ -137,11 +137,11 @@ export default function EditSCModal({ open, onClose }: EditSCModalProps) {
         setSignatureLoading(true);
 
         const photoUrl = await fetchImageAsObjectUrl(
-            `/api/scpics/Images/${originalData.scid}`,
+            `/api/youthpics/Images/${originalData.youthid}`,
             ["jpg", "jpeg", "png"]
         );
         const sigUrl = await fetchImageAsObjectUrl(
-            `/api/scpics/Signature/${originalData.scid}`,
+            `/api/youthpics/Signature/${originalData.youthid}`,
             ["png", "jpg", "jpeg"]
         );
 
@@ -156,42 +156,42 @@ export default function EditSCModal({ open, onClose }: EditSCModalProps) {
 
 
 
-    const handleClose = () =>{
+    const handleClose = () => {
         setCaptured("");
         setPhotoPreview("");
         setSignaturePreview("");
         setSignature("");
         onClose()
-    }    
+    }
 
     useEffect(() => {
-        runScidValidation(scid);
+        runScidValidation(youthid);
     }, [suppressVerify]);
 
-    const getScidNumber = (scid: string) => {
+    const getScidNumber = (youthid: string) => {
         // Split by '-' and get the numeric part
-        const parts = scid.split("-");
-        return parts.length >= 3 ? parts[2] : scid;
+        const parts = youthid.split("-");
+        return parts.length >= 3 ? parts[2] : youthid;
     };
 
 
     const runScidValidation = async (value: string) => {
         if (suppressVerify) {
-            setScidValid(null); // skip verification
+            setYouthidValid(null); // skip verification
             return;
         }
 
-        const originalNumber = getScidNumber(selectedSCData?.scid || "");
+        const originalNumber = getScidNumber(selectedSCData?.youthid || "");
         const newNumber = getScidNumber(value);
 
         if (newNumber === originalNumber) {
-            setScidValid(true); // numeric part unchanged => treat as valid
+            setYouthidValid(true); // numeric part unchanged => treat as valid
             return;
         }
 
-        setScidValid(null); // show "Checking SCID..." temporarily
+        setYouthidValid(null); // show "Checking SCID..." temporarily
         const exists = await verifySCID(value);
-        setScidValid(!exists);
+        setYouthidValid(!exists);
     };
 
     const handleScidInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -201,7 +201,7 @@ export default function EditSCModal({ open, onClose }: EditSCModalProps) {
 
         let val = e.target.value.toUpperCase(); // transform if needed
 
-        setScid(val); // update state
+        setYouthid(val); // update state
 
         // restore cursor after React rerender
         requestAnimationFrame(() => {
@@ -221,7 +221,7 @@ export default function EditSCModal({ open, onClose }: EditSCModalProps) {
     const handleConfirm = async () => {
         if (!selectedSCData) return;
 
-        if (!suppressVerify && scid !== selectedSCData.scid && scidValid === false) {
+        if (!suppressVerify && youthid !== selectedSCData.youthid && youthidValid === false) {
             showSnackBar("SCID already exists. Please choose another.", "error");
             return;
         }
@@ -229,15 +229,15 @@ export default function EditSCModal({ open, onClose }: EditSCModalProps) {
 
         const updatedData = {
             ...selectedSCData,
-            scid: scid.toUpperCase(),
+            youthid: youthid.toUpperCase(),
             fullName: fullName.toUpperCase(),
             birthDate,
             address: address.toUpperCase(),
             contactPerson: contactPerson.toUpperCase(),
             contactNum,
             contactAddress: contactAddress.toUpperCase(),
-            oldScid: selectedSCData.scid,   // pass old
-            newScid: scid.toUpperCase(),    // pass new
+            oldScid: selectedSCData.youthid,   // pass old
+            newScid: youthid.toUpperCase(),    // pass new
         };
 
         try {
@@ -265,20 +265,20 @@ export default function EditSCModal({ open, onClose }: EditSCModalProps) {
 
         if (!isPhotoChanged && !isSignatureChanged) {
             // Nothing to upload
-            showSnackBar(`No new changes for SC ${scid}`, "info");
+            showSnackBar(`No new changes for SC ${youthid}`, "info");
             return;
         }
 
         try {
             if (isPhotoChanged) {
-                await saveUserImage(captured!, `${scid}.jpg`);
+                await saveUserImage(captured!, `${youthid}.jpg`);
             }
 
             if (isSignatureChanged) {
-                await saveSignature(signature!, `${scid}.png`);
+                await saveSignature(signature!, `${youthid}.png`);
             }
 
-            showSnackBar(`SC ${scid} updated successfully`, "success");
+            showSnackBar(`SC ${youthid} updated successfully`, "success");
         } catch (err) {
             console.error("Upload failed:", err);
             alert("Failed to upload images/signature.");
@@ -311,7 +311,7 @@ export default function EditSCModal({ open, onClose }: EditSCModalProps) {
             InputLabelProps={label === "Birthdate" ? { shrink: true } : undefined}
             type={label === "Birthdate" ? "date" : "text"}
         />
-    );    
+    );
 
     return (
         <Dialog
@@ -339,7 +339,7 @@ export default function EditSCModal({ open, onClose }: EditSCModalProps) {
                     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                         <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
                             Senior Details
-                        </Typography>    
+                        </Typography>
                         <Box
                             sx={{
                                 display: "flex",
@@ -350,20 +350,19 @@ export default function EditSCModal({ open, onClose }: EditSCModalProps) {
                         >
                             {/* SCID input */}
                             <TextField
-                                label="SCID"
-                                value={scid}
+                                label="Youth ID"
+                                value={youthid}
                                 onChange={handleScidInputChange}
-
                                 fullWidth
                                 InputProps={{
                                     readOnly: !canEditSCID,
                                     endAdornment:
                                         canEditSCID &&
-                                            scid !== selectedSCData?.scid &&
-                                            scidValid !== null &&
-                                            !suppressVerify ? ( // hide icon when skipping
+                                            youthid !== selectedSCData?.youthid &&
+                                            youthidValid !== null &&
+                                            !suppressVerify ? (
                                             <InputAdornment position="end">
-                                                {scidValid ? (
+                                                {youthidValid ? (
                                                     <CheckCircleIcon color="success" />
                                                 ) : (
                                                     <CancelIcon color="error" />
@@ -371,30 +370,40 @@ export default function EditSCModal({ open, onClose }: EditSCModalProps) {
                                             </InputAdornment>
                                         ) : null,
                                 }}
-                                error={canEditSCID && scid !== selectedSCData?.scid && scidValid === false}
+                                error={
+                                    canEditSCID &&
+                                    youthid !== selectedSCData?.youthid &&
+                                    (youthidValid === false || youthid.length !== 13)
+                                }
                                 helperText={
-                                    canEditSCID && scid !== selectedSCData?.scid
-                                        ? suppressVerify
-                                            ? "SCID verification skipped"
-                                            : scidValid === null
-                                                ? "Checking SCID..."
-                                                : scidValid
-                                                    ? "SCID is available"
-                                                    : "SCID already exists"
+                                    canEditSCID && youthid !== selectedSCData?.youthid
+                                        ? youthid.length !== 13
+                                            ? "Youth ID must be 13 characters"
+                                            : suppressVerify
+                                                ? "Youth ID verification skipped"
+                                                : youthidValid === null
+                                                    ? "Checking Youth ID..."
+                                                    : youthidValid
+                                                        ? "Youth ID is available"
+                                                        : "Youth ID already exists"
                                         : ""
                                 }
                                 FormHelperTextProps={{
                                     sx: {
-                                        color: suppressVerify
-                                            ? "text.secondary"
-                                            : scidValid === null
-                                                ? "text.secondary"
-                                                : scidValid
-                                                    ? "green"
-                                                    : "red",
+                                        color:
+                                            youthid.length !== 13
+                                                ? "red"
+                                                : suppressVerify
+                                                    ? "text.secondary"
+                                                    : youthidValid === null
+                                                        ? "text.secondary"
+                                                        : youthidValid
+                                                            ? "green"
+                                                            : "red",
                                     },
                                 }}
                             />
+
 
                             {/* Suppress checkbox */}
                             <FormControlLabel
@@ -405,7 +414,7 @@ export default function EditSCModal({ open, onClose }: EditSCModalProps) {
                                         onChange={(e) => setSuppressVerify(e.target.checked)}
                                     />
                                 }
-                                label="Skip SCID Check"
+                                label="Skip Youth ID Check"
                             />
                         </Box>
 
@@ -416,7 +425,7 @@ export default function EditSCModal({ open, onClose }: EditSCModalProps) {
                             setBirthDate
                         )}
                         {inputField("Address", address, setAddress, false, true)}
-                        {inputField("Contact Person", contactPerson, setContactPerson, false, true)}
+                        {/* {inputField("Contact Person", contactPerson, setContactPerson, false, true)}
                         {inputField("Contact Number", contactNum, setContactNum)}
                         {inputField(
                             "Contact Address",
@@ -424,7 +433,7 @@ export default function EditSCModal({ open, onClose }: EditSCModalProps) {
                             setContactAddress,
                             false,
                             true
-                        )}
+                        )} */}
                     </Box>
 
                     {/* Right: Preview Section */}
@@ -586,7 +595,7 @@ export default function EditSCModal({ open, onClose }: EditSCModalProps) {
                     </Box>
                 </DialogActions>
 
-   
+
             </Box>
         </Dialog>
     );

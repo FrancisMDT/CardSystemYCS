@@ -3,20 +3,24 @@
 import React from "react";
 import { Box, Typography, CircularProgress } from "@mui/material";
 import QRCode from "react-qrcode-logo";
-import { SeniorCardModel } from "@/app/models/SeniorCard/seniorCardModel";
+import { YouthCardModel } from "@/app/models/SeniorCard/youthCardModel";
 
 interface FrontCardProps {
-    selectedSCData: Partial<SeniorCardModel> | null;
+    selectedSCData: Partial<YouthCardModel> | null;
     photoUrl: string | null;
     loadingPhoto?: boolean;
     operation?: "view" | "print";
+    signatureUrl: string | null,
+    loadingSignature: boolean,
 }
 
 export default function FrontCard({
     selectedSCData,
     photoUrl,
     loadingPhoto,
-    operation = "view", // default to "view"
+    operation = "view",
+    signatureUrl,
+    loadingSignature,
 }: FrontCardProps) {
     const isPrint = operation === "print";
 
@@ -45,10 +49,10 @@ export default function FrontCard({
                 <Box
                     sx={{
                         position: "absolute",
-                        top: 112,
-                        left: 24.5,
-                        width: 115,
-                        height: 115,
+                        top: 72,
+                        left: 26,
+                        width: 134,
+                        height: 134,
                         overflow: "hidden",
                         zIndex: 0,
                         display: "flex",
@@ -93,29 +97,57 @@ export default function FrontCard({
                             overflow: "hidden",
                         }}
                     >
-                        {selectedSCData?.scid}
+                        {selectedSCData?.youthid}
                     </Typography>
                 </Box>
 
                 {/* Background */}
-                <Box sx={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", zIndex: 1 }}>
+                <Box sx={{ position: "absolute", top: -1, left: 0, width: "100%", height: "100%", zIndex: 1}}>
                     <img
-                        src="/Senior_Card_Front3.png"
+                        src="/youthid_front.png"
                         alt="Background"
                         style={{ width: "100%", height: "100%", objectFit: "cover" }}
                     />
                 </Box>
 
                 {/* QR Code */}
-                <Box sx={{ position: "absolute", top: 45, right: 30, zIndex: 2 }}>
+                <Box sx={{ position: "absolute", top: 32, right: 7, zIndex: 2 }}>
                     <QRCode
-                        value={selectedSCData?.scid}
+                        value={selectedSCData?.youthid}
                         size={148}
                         bgColor="#FFFFFF00"
-                        style={{ maxWidth: "100%", width: "75px", height: "auto" }}
+                        style={{ maxWidth: "100%", width: "83px", height: "auto" }}
                         removeQrCodeBehindLogo
                         qrStyle="squares"
                     />
+                </Box>
+
+                {/* Signature */}
+                <Box
+                    sx={{
+                        position: "absolute",
+                        top: 27,
+                        right: 22,
+                        width: "190px",
+                        height: "50px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        bgcolor: loadingSignature ? "rgba(255,255,255,0.6)" : "transparent",
+                        zIndex: 10000,
+                    }}
+                >
+                    {loadingSignature ? (
+                        <CircularProgress size={28} />
+                    ) : signatureUrl ? (
+                        <img
+                            src={signatureUrl}
+                            alt="Signature"
+                            style={{ width: "100%", height: "100%", objectFit: "fill" }}
+                        />
+                    ) : (
+                        <Typography variant="caption">No Image</Typography>
+                    )}
                 </Box>
 
                 {/* Full Name */}

@@ -5,7 +5,7 @@ export async function GET(req: NextRequest) {
     try {
         // Check if the `id` column exists in tblsc
         const [rows]: any = await pool.query(
-            `SHOW COLUMNS FROM tblsc LIKE 'id'`
+            `SHOW COLUMNS FROM tblyouth LIKE 'id'`
         );
 
         const hasIdColumn = Array.isArray(rows) && rows.length > 0;

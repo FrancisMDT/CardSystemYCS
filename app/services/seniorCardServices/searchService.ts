@@ -1,8 +1,9 @@
-import { SeniorCardApiResponse, SeniorCardModel } from "@/app/models/SeniorCard/seniorCardModel";
+import { YouthCardApiResponse, YouthCardModel } from "@/app/models/SeniorCard/youthCardModel";
 
-export const searchSeniorCards = async (query: string): Promise<SeniorCardModel[]> => {
+
+export const searchSeniorCards = async (query: string): Promise<YouthCardModel[]> => {
     try {
-        const res = await fetch(`/api/scid?query=${encodeURIComponent(query)}`, {
+        const res = await fetch(`/api/youthid?query=${encodeURIComponent(query)}`, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
@@ -16,7 +17,7 @@ export const searchSeniorCards = async (query: string): Promise<SeniorCardModel[
             throw new Error("Failed to fetch Senior Card data.");
         }
 
-        const data: SeniorCardApiResponse = await res.json();
+        const data: YouthCardApiResponse = await res.json();
         console.log("data from API:", data);
         return data.data || [];
     } catch (err) {

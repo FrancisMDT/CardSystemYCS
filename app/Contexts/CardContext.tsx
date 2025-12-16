@@ -1,7 +1,6 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
-import { SeniorCardModel, VLSearchResult } from "../models/SeniorCard/seniorCardModel";
 import { searchSeniorCards } from "../services/seniorCardServices/searchService";
 import { addSCDataService } from "../services/seniorCardServices/addService";
 import { deleteSCDataService } from "../services/seniorCardServices/deleteService";
@@ -12,20 +11,21 @@ import { searchVLService } from "../services/seniorCardServices/SearchVLService"
 import { checkSCIDExists } from "../services/seniorCardServices/SCIDCheckService";
 import { renameScidFiles } from "../services/imageServices/editImageNameService";
 import { deleteImages } from "../services/imageServices/deleteImagesService";
+import { VLSearchResult, YouthCardModel } from "../models/SeniorCard/youthCardModel";
 
 type SeniorCardContextType = {
-    SCData: Partial<SeniorCardModel>[];
-    selectedSCData: Partial<SeniorCardModel> | null;
-    setSelectedSCData: (sc: Partial<SeniorCardModel> | null) => void;
+    SCData: Partial<YouthCardModel>[];
+    selectedSCData: Partial<YouthCardModel> | null;
+    setSelectedSCData: (sc: Partial<YouthCardModel> | null) => void;
     loading: boolean;
     searchSCData: (query: string) => Promise<void>;
-    selectSCData: (sc: Partial<SeniorCardModel> | null) => void;
-    addSCData: (data: Partial<SeniorCardModel>) => Promise<void>;
-    editSCData: (data: Partial<SeniorCardModel>) => Promise<void>;
-    deleteSCData: (scid: string) => Promise<void>;
+    selectSCData: (sc: Partial<YouthCardModel> | null) => void;
+    addSCData: (data: Partial<YouthCardModel>) => Promise<void>;
+    editSCData: (data: Partial<YouthCardModel>) => Promise<void>;
+    deleteSCData: (youthid: string) => Promise<void>;
 
-    markAsPrinted: (scid: string) => Promise<void>;
-    revertPrintedStatus: (scid: string) => Promise<void>;
+    markAsPrinted: (youthid: string) => Promise<void>;
+    revertPrintedStatus: (youthid: string) => Promise<void>;
 
     idNumber: string;
     setIdNumber: React.Dispatch<React.SetStateAction<string>>;
@@ -35,19 +35,19 @@ type SeniorCardContextType = {
     vlData: Partial<VLSearchResult>[];
     setVLData: React.Dispatch<React.SetStateAction<Partial<VLSearchResult>[]>>;
     scidExists: boolean;
-    verifySCID: (scid: string) => Promise<boolean>;
+    verifySCID: (youthid: string) => Promise<boolean>;
     setScidExists: React.Dispatch<React.SetStateAction<boolean>>;
 
     canEditSCID: boolean;
     setCanEditSCID: React.Dispatch<React.SetStateAction<boolean>>;
-    fetchSCIDMetadata: () => Promise<void>;
+    fetchYouthIDMetadata: () => Promise<void>;
 };
 
 const SeniorCardDataContext = createContext<SeniorCardContextType | undefined>(undefined);
 
 export const SeniorCardDataProvider = ({ children }: { children: ReactNode }) => {
-    const [SCData, setSCData] = useState<Partial<SeniorCardModel>[]>([]);
-    const [selectedSCData, setSelectedSCData] = useState<Partial<SeniorCardModel> | null>(null);
+    const [SCData, setSCData] = useState<Partial<YouthCardModel>[]>([]);
+    const [selectedSCData, setSelectedSCData] = useState<Partial<YouthCardModel> | null>(null);
     const [loading, setLoading] = useState(false);
 
     const [idNumber, setIdNumber] = useState<string>(""); // make it explicit
@@ -110,11 +110,11 @@ export const SeniorCardDataProvider = ({ children }: { children: ReactNode }) =>
         }
     };
 
-    const selectSCData = (sc: Partial<SeniorCardModel> | null) => {
+    const selectSCData = (sc: Partial<YouthCardModel> | null) => {
         setSelectedSCData(sc);
     };
 
-    const addSCData = async (data: Partial<SeniorCardModel>) => {
+    const addSCData = async (data: Partial<YouthCardModel>) => {
         setLoading(true);
         try {
             const newEntry = await addSCDataService(data);
@@ -129,15 +129,15 @@ export const SeniorCardDataProvider = ({ children }: { children: ReactNode }) =>
     };
 
     const editSCData = async (
-        data: Partial<SeniorCardModel> & { oldScid?: string; newScid?: string }
+        data: Partial<YouthCardModel> & { oldYouthid?: string; newYouthid?: string }
     ) => {
         setLoading(true);
         try {
             const updated = await editSCDataService(data);
 
             // Rename files only if SCID actually changed
-            if (data.oldScid && data.newScid && data.oldScid !== data.newScid) {
-                const result = await renameScidFiles(data.oldScid, data.newScid);
+            if (data.oldYouthid && data.newYouthid && data.oldYouthid !== data.newYouthid) {
+                const result = await renameScidFiles(data.oldYouthid, data.newYouthid);
                 if (result.success) {
                     console.log("Rename results:", result.results);
                 } else {
@@ -148,7 +148,7 @@ export const SeniorCardDataProvider = ({ children }: { children: ReactNode }) =>
 
             // Update UI state
             setSCData(prev =>
-                prev.map(sc => sc.scid === updated.scid ? updated : sc)
+                prev.map(sc => sc?.youthid === updated?.youthid ? updated : sc)
             );
 
             showSnackBar("SCData edited successfully", "success");
@@ -166,15 +166,15 @@ export const SeniorCardDataProvider = ({ children }: { children: ReactNode }) =>
 
 
 
-    const deleteSCData = async (scid: string, id?: string) => {
+    const deleteSCData = async (youthid: string, id?: string) => {
         setLoading(true);
         try {
             // Run both operations
-            await deleteSCDataService({ id, scid });
-            await deleteImages(scid);
+            await deleteSCDataService({ id, youthid });
+            await deleteImages(youthid);
 
             // Update UI state only if both succeed
-            setSCData(prev => prev.filter(sc => sc.scid !== scid));
+            setSCData(prev => prev.filter(sc => sc.youthid !== youthid));
             showSnackBar("SCData deleted successfully", "success");
             refreshSCData();
         } catch (err) {
@@ -187,18 +187,18 @@ export const SeniorCardDataProvider = ({ children }: { children: ReactNode }) =>
 
 
 
-    const markAsPrinted = async (scid: string) => {
+    const markAsPrinted = async (youthid: string) => {
         setLoading(true);
         try {
             // Call your service to update the SC data
-            const updated = await updateSCStatus({ scid, status: "PRINTED" });
+            const updated = await updateSCStatus({ youthid, status: "PRINTED" });
 
             // Update your local state
             setSCData(prev =>
-                prev.map(sc => (sc.scid === updated.scid ? updated : sc))
+                prev.map(sc => (sc.youthid === updated.youthid ? updated : sc))
             );
 
-            showSnackBar(`SC ${scid} marked as PRINTED`, "success");
+            showSnackBar(`YID ${youthid} marked as PRINTED`, "success");
         } catch (err) {
             console.error("Error marking SC as PRINTED:", err);
             showSnackBar(
@@ -206,20 +206,20 @@ export const SeniorCardDataProvider = ({ children }: { children: ReactNode }) =>
                 "error"
             );
         } finally {
-            showSnackBar(`SC ${scid} marked as PRINTED`, "success");
+            showSnackBar(`YID ${youthid} marked as PRINTED`, "success");
             setLoading(false);
             refreshSCData();
         }
     };
 
-    const revertPrintedStatus = async (scid: string) => {
+    const revertPrintedStatus = async (youthid: string) => {
         setLoading(true);
         try {
-            const updated = await updateSCStatus({ scid, status: "ID" });
+            const updated = await updateSCStatus({ youthid, status: "ID" });
             setSCData(prev =>
-                prev.map(sc => (sc.scid === updated.scid ? updated : sc))
+                prev.map(sc => (sc.youthid === updated.youthid ? updated : sc))
             );
-            showSnackBar(`SC ${scid} reverted to ID`, "success");
+            showSnackBar(`SC ${youthid} reverted to ID`, "success");
         } catch (err) {
             console.error("Error reverting SC status:", err);
             showSnackBar(
@@ -227,15 +227,15 @@ export const SeniorCardDataProvider = ({ children }: { children: ReactNode }) =>
                 "error"
             );
         } finally {
-            showSnackBar(`SC ${scid} reverted to ID`, "success");
+            showSnackBar(`SC ${youthid} reverted to ID`, "success");
             setLoading(false);
             refreshSCData();
         }
     };
 
-    // async function handleScidUpdate(oldScid: string, newScid: string) {
+    // async function handleScidUpdate(oldYouthid: string, newYouthid: string) {
     //     try {
-    //         const result = await renameScidFiles(oldScid, newScid);
+    //         const result = await renameScidFiles(oldYouthid, newYouthid);
     //         if (result.success) {
     //             console.log("Rename results:", result.results);
     //         } else {
@@ -246,19 +246,19 @@ export const SeniorCardDataProvider = ({ children }: { children: ReactNode }) =>
     //     }
     // }
 
-    const fetchSCIDMetadata = async () => {
+    const fetchYouthIDMetadata = async () => {
         try {
-            const res = await fetch("/api/scid/metadata");
+            const res = await fetch("/api/youthid/metadata");
             const data = await res.json();
             if (data.success) setCanEditSCID(data.hasIdColumn);
         } catch (err) {
-            console.error("Failed to fetch SCID metadata:", err);
+            console.error("Failed to fetch YouthID metadata:", err);
             setCanEditSCID(false);
         }
     };
 
     useEffect(() => {
-        fetchSCIDMetadata();
+        fetchYouthIDMetadata();
     }, []);
 
     return (
@@ -287,7 +287,7 @@ export const SeniorCardDataProvider = ({ children }: { children: ReactNode }) =>
                 setScidExists,
                 canEditSCID,
                 setCanEditSCID,
-                fetchSCIDMetadata,
+                fetchYouthIDMetadata,
             }}
         >
             {children}

@@ -7,11 +7,11 @@ const BASE_PATH = process.env.NEXT_STORAGE_PATH!.trim();
 export async function DELETE(req: NextRequest) {
     try {
         const { searchParams } = new URL(req.url);
-        const scid = searchParams.get("scid");
+        const youthid = searchParams.get("youthid");
 
-        if (!scid) {
+        if (!youthid) {
             return NextResponse.json(
-                { success: false, error: "Missing SCID" },
+                { success: false, error: "Missing YouthID" },
                 { status: 400 }
             );
         }
@@ -25,21 +25,21 @@ export async function DELETE(req: NextRequest) {
         }[] = [];
 
         for (const folder of folders) {
-            const fileJpg = path.join(BASE_PATH, folder, `${scid}.jpg`);
-            const filePng = path.join(BASE_PATH, folder, `${scid}.png`);
+            const fileJpg = path.join(BASE_PATH, folder, `${youthid}.jpg`);
+            const filePng = path.join(BASE_PATH, folder, `${youthid}.png`);
 
             let deleted = false;
 
             try {
                 await fs.unlink(fileJpg);
-                results.push({ type: folder, file: `${scid}.jpg`, success: true });
+                results.push({ type: folder, file: `${youthid}.jpg`, success: true });
                 deleted = true;
             } catch { }
 
             if (!deleted) {
                 try {
                     await fs.unlink(filePng);
-                    results.push({ type: folder, file: `${scid}.png`, success: true });
+                    results.push({ type: folder, file: `${youthid}.png`, success: true });
                     deleted = true;
                 } catch { }
             }
@@ -47,7 +47,7 @@ export async function DELETE(req: NextRequest) {
             if (!deleted) {
                 results.push({
                     type: folder,
-                    file: `${scid}`,
+                    file: `${youthid}`,
                     success: false,
                     error: "File not found",
                 });

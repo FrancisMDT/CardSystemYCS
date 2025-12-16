@@ -23,8 +23,7 @@ import {
     FormHelperText,
     Checkbox,
 } from "@mui/material";
-import { SeniorCardModel } from "@/app/models/SeniorCard/seniorCardModel";
-import { useSeniorCardDataContext } from "@/app/Contexts/SeniorCardContext";
+import { useSeniorCardDataContext } from "@/app/Contexts/CardContext";
 import { BARANGAYS } from "../components/barangay";
 import { SignatureUpload } from "../components/signatureUpload";
 import FaceCropModal from "../components/imageCrop";
@@ -38,15 +37,25 @@ import VLSearchModal from "./SearchVLData";
 import CancelIcon from "@mui/icons-material/Cancel";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import SearchIcon from '@mui/icons-material/Search';
+import { YouthCardModel } from "@/app/models/SeniorCard/youthCardModel";
 
 interface NewSCIDModalProps {
     open: boolean;
     onClose: () => void;
 }
 
+const Affiliations = [
+    "Lucena Youth Cultural Organization",
+    "Lucena Youth Academic Circle",
+    "The Breakfast Club",
+    "Youth for Earth",
+    "Halina Kabataan"
+];
+
 export default function NewSCIDModal({ open, onClose }: NewSCIDModalProps) {
+    const [selectedAffiliation, setSelectedAffiliation] = useState("");
     const [barangayCode, setBarangayCode] = useState("");
-    const { idNumber, setIdNumber, registration, setRegistration, addSCData, verifySCID, setScidExists, scidExists } = useSeniorCardDataContext();
+    const { idNumber, setIdNumber, addSCData, verifySCID, setScidExists, scidExists } = useSeniorCardDataContext();
     const [nameFormat, setNameFormat] = useState<"single" | "split">("single");
 
     const singleFullNameRef = useRef<HTMLInputElement>(null);
@@ -76,7 +85,7 @@ export default function NewSCIDModal({ open, onClose }: NewSCIDModalProps) {
     const [selectedVL, setSelectedVL] = useState<any | null>(null); // store the selected VL row
 
 
-    const scidLabel = `SC-${barangayCode || "___"}-${idNumber.padEnd(6, "_")}-${registration}`;
+    const scidLabel = `LC-YMC-${idNumber.padEnd(6, "_")}`;
 
     const handleUpload = async () => {
         if (!captured) return alert("No image captured!");
@@ -86,8 +95,7 @@ export default function NewSCIDModal({ open, onClose }: NewSCIDModalProps) {
     };
 
     const handleClearAll = () => {
-        setIdNumber("");
-        setRegistration("NR");
+        setIdNumber("");        
         setNameFormat("single");
         setBirthDate("");
         setStreetAddress("");
@@ -142,19 +150,22 @@ export default function NewSCIDModal({ open, onClose }: NewSCIDModalProps) {
     const scidComplete = !scidLabel.includes("_");
     const fullNameExists = compiledFullName.trim().length > 0;
     const addressExists = compiledAddress.trim().length > 0;
-    const canConfirm = scidComplete && fullNameExists && addressExists && age >= 55 && !scidExists;
+    const canConfirm = scidComplete && fullNameExists && addressExists && !scidExists;
 
     const handleConfirm = async () => {
-        const newSCData: Partial<SeniorCardModel> = {
-            scid: scidLabel,
+        const newSCData: Partial<YouthCardModel> = {
+            youthid: scidLabel,
             fullName: compiledFullName.toUpperCase(),
             birthDate,
             address: compiledAddress.toUpperCase(),
+            barangay: BARANGAYS.find(b => b.code === barangayCode)?.name.toUpperCase() || "",
+            affiliates: selectedAffiliation,
             contactPerson: compiledContactName.toUpperCase() || "-",
             contactNum: contactNumberRef.current?.value || "-",
             contactAddress: contactAddressRef.current?.value.toUpperCase() || "-",
         };
         try {
+            console.log("New SC Data to add:", newSCData);
             await addSCData(newSCData);
             if (captured && signature) await handleUpload();
             handleClearAll();
@@ -172,7 +183,7 @@ export default function NewSCIDModal({ open, onClose }: NewSCIDModalProps) {
             const scid = `${idNumber.padStart(6, "0")}`; // zero-pad just in case
             verifySCID(scid);
         }
-    }, [idNumber, barangayCode, registration, checkSCID]);
+    }, [idNumber, barangayCode, checkSCID]);
 
 
     return (
@@ -207,7 +218,7 @@ export default function NewSCIDModal({ open, onClose }: NewSCIDModalProps) {
                             gap: 2,
                         }}
                     >
-                        <Typography>New Senior Card Entry</Typography>
+                        <Typography>New Youth Card Entry</Typography>
                         <FormControl size="small" sx={{ width: { xs: "100%", md: "50%" } }}>
                             <Select
                                 value={nameFormat}
@@ -233,39 +244,23 @@ export default function NewSCIDModal({ open, onClose }: NewSCIDModalProps) {
                                 <Typography variant="subtitle2">SCID</Typography>
                                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                     <Typography variant="h6">{scidLabel}</Typography>
-                                    {checkSCID &&idNumber && scidExists !== null && (
+                                    {checkSCID && idNumber && scidExists !== null && (
                                         <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                                             {scidExists ? (
                                                 <>
                                                     <CancelIcon color="error" fontSize="small" />
-                                                    <Typography variant="subtitle1" color="error.main">SCID already exists</Typography>
+                                                    <Typography variant="subtitle1" color="error.main">YouthID already exists</Typography>
                                                 </>
                                             ) : (
                                                 <>
                                                     <CheckCircleIcon color="success" fontSize="small" />
-                                                    <Typography variant="subtitle1" color="success.main">SCID available</Typography>
+                                                        <Typography variant="subtitle1" color="success.main">YouthID available</Typography>
                                                 </>
                                             )}
                                         </Box>
                                     )}
                                 </Box>
                                 <FormControl sx={{ gap: 2, mt: 1 }}>
-                                    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                                        <FormLabel>Registration</FormLabel>
-                                        <FormControlLabel
-                                        labelPlacement="start"
-                                            control={
-                                                <Checkbox
-                                                    checked={checkSCID}
-                                                    onChange={(e) => setCheckSCID(e.target.checked)}
-                                                    color="primary"
-                                                    
-                                                />
-                                            }
-                                            label="Check SCID"
-                                        />
-                                    </Box>
-
                                     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                                         <TextField
                                             label="6-digit ID"
@@ -294,15 +289,19 @@ export default function NewSCIDModal({ open, onClose }: NewSCIDModalProps) {
                                                     </InputAdornment>
                                                 ) : null,
                                             }}
-                                        />
-                                        <RadioGroup
-                                            row
-                                            value={registration}
-                                            onChange={(e) => setRegistration(e.target.value as "NR" | "R")}
-                                        >
-                                            <FormControlLabel value="NR" control={<Radio />} label="Not Registered" />
-                                            <FormControlLabel value="R" control={<Radio />} label="Registered" />
-                                        </RadioGroup>
+                                        />                  
+                                        <FormControlLabel
+                                            // labelPlacement="start"
+                                            control={
+                                                <Checkbox
+                                                    checked={checkSCID}
+                                                    onChange={(e) => setCheckSCID(e.target.checked)}
+                                                    color="primary"
+
+                                                />
+                                            }
+                                            label="Check YouthID"
+                                        />                      
                                     </Box>
                                 </FormControl>
                             </Box>
@@ -360,7 +359,9 @@ export default function NewSCIDModal({ open, onClose }: NewSCIDModalProps) {
 
                         {/* Senior Data */}
                         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                            <Typography variant="subtitle2">Senior Data</Typography>
+                            <Typography variant="subtitle2" fontWeight="bold">
+                                Youth Data
+                            </Typography>
                             <Box sx={{ display: "flex", flexDirection: { xs: "column", md: nameFormat === "single" ? "row" : "column" }, gap: 2 }}>
                                 {nameFormat === "single" ? (
                                     <TextField label="Full Name" inputRef={singleFullNameRef} fullWidth inputProps={{ style: { textTransform: "uppercase" } }} />
@@ -443,8 +444,29 @@ export default function NewSCIDModal({ open, onClose }: NewSCIDModalProps) {
                             </Box>
                         </Box>
 
-                        {/* Contact Person */}
                         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                            {/* <Typography variant="subtitle2" fontWeight="bold">
+                                Affiliation
+                            </Typography> */}
+                            <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, gap: 2 }}>
+                                <TextField
+                                    select
+                                    label="Affiliations"
+                                    value={selectedAffiliation}
+                                    onChange={(e) => setSelectedAffiliation(e.target.value)}
+                                    fullWidth
+                                >
+                                    {Affiliations.map((b) => (
+                                        <MenuItem key={b} value={b}>
+                                            {b}
+                                        </MenuItem>
+                                    ))}
+                                </TextField>                                
+                            </Box>
+                        </Box>
+
+                        {/* Contact Person */}
+                        {/* <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                             <Typography variant="subtitle2">Contact Person</Typography>
                             <Box sx={{ display: "flex", flexDirection: { xs: "column", md: nameFormat === "single" ? "row" : "column" }, gap: 2 }}>
                                 {nameFormat === "single" ? (
@@ -469,7 +491,7 @@ export default function NewSCIDModal({ open, onClose }: NewSCIDModalProps) {
                                 />
                             </Box>
                             <TextField label="Contact Address" inputRef={contactAddressRef} fullWidth inputProps={{ style: { textTransform: "uppercase" } }} />
-                        </Box>
+                        </Box> */}
                     </DialogContent>
 
                     <DialogActions
@@ -556,8 +578,7 @@ export default function NewSCIDModal({ open, onClose }: NewSCIDModalProps) {
 
                         setSelectedVL(vl); // store the selected VL in state
                         const paddedId = String(vl.idnum || "").padStart(6, "0");
-                        setIdNumber(paddedId);
-                        setRegistration("R");
+                        setIdNumber(paddedId);                        
 
                         // Set Full Name
                         if (singleFullNameRef.current) singleFullNameRef.current.value = vl.fullname.toUpperCase();

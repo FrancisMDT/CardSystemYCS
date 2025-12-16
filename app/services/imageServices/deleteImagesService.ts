@@ -1,9 +1,9 @@
 export async function deleteImages(
-    scid: string
+    YouthID: string
 ): Promise<{ message: string; deletedFiles: string[] }> {
-    if (!scid) throw new Error("Missing scid");
+    if (!YouthID) throw new Error("Missing YouthID");
 
-    const response = await fetch(`/api/scpics/delete?scid=${encodeURIComponent(scid)}`, {
+    const response = await fetch(`/api/youthpics/delete?YouthID=${encodeURIComponent(YouthID)}`, {
         method: "DELETE",
     });
 

@@ -1,7 +1,8 @@
-import { SeniorCardModel } from "@/app/models/SeniorCard/seniorCardModel";
+import { YouthCardModel } from "@/app/models/SeniorCard/youthCardModel";
 
-export const addSCDataService = async (data: Partial<SeniorCardModel>): Promise<Partial<SeniorCardModel>> => {
-    const res = await fetch("/api/scid", {
+
+export const addSCDataService = async (data: Partial<YouthCardModel>): Promise<Partial<YouthCardModel>> => {
+    const res = await fetch("/api/youthid", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),

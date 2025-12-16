@@ -4,7 +4,7 @@ import pool from "@/lib/db";
 export async function GET(req: NextRequest) {
     try {
         const url = new URL(req.url);
-        let idNumber = url.searchParams.get("scid"); // <--- match what the service sends
+        let idNumber = url.searchParams.get("youthid"); // <--- match what the service sends
 
         if (!idNumber) return NextResponse.json({ exists: false });
 
@@ -14,12 +14,12 @@ export async function GET(req: NextRequest) {
         // Ensure 6-digit zero-padded string
         const paddedId = idNumber.padStart(6, "0");
 
-        console.log("Checking SCID for middle ID:", paddedId);
+        console.log("Checking YouthID for middle ID:", paddedId);
 
         const [rows]: any = await pool.query(
-            `SELECT SCID
-             FROM tblsc
-             WHERE TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(SCID, '-', 3), '-', -1)) = ?`,
+            `SELECT YouthID
+             FROM tblyouth
+             WHERE TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(YouthID, '-', 3), '-', -1)) = ?`,
             [paddedId]
         );
 
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
         const exists = Array.isArray(rows) && rows.length > 0;
         return NextResponse.json({ exists });
     } catch (err) {
-        console.error("SCID check error:", err);
+        console.error("YouthID check error:", err);
         return NextResponse.json({ exists: false }, { status: 500 });
     }
 }

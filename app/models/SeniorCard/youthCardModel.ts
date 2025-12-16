@@ -1,9 +1,11 @@
-export interface SeniorCardModel {
+export interface YouthCardModel {
     id?: number, // optional for new entries
-    scid: string,
+    youthid: string,
+    affiliates: string,
     fullName: string,
     birthDate: string,
     address: string,
+    barangay: string,
     contactPerson: string,
     contactNum: string,
     contactAddress: string,
@@ -11,9 +13,9 @@ export interface SeniorCardModel {
     dateID: string,
 }
 
-export interface SeniorCardApiResponse {
+export interface YouthCardApiResponse {
     success: boolean,
-    data: SeniorCardModel[],
+    data: YouthCardModel[],
 }
 
 export interface VLSearchResult {

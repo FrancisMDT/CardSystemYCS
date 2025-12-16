@@ -6,11 +6,11 @@ const BASE_PATH = process.env.NEXT_STORAGE_PATH!.trim();
 
 export async function POST(req: NextRequest) {
     try {
-        const { oldScid, newScid } = await req.json();
+        const { oldYouthid, newYouthid } = await req.json();
 
-        if (!oldScid || !newScid) {
+        if (!oldYouthid || !newYouthid) {
             return NextResponse.json(
-                { success: false, error: "Missing oldScid or newScid" },
+                { success: false, error: "Missing oldYouthid or newYouthid" },
                 { status: 400 }
             );
         }
@@ -29,15 +29,15 @@ export async function POST(req: NextRequest) {
             let renamed = false;
 
             for (const ext of exts) {
-                const oldPath = path.join(BASE_PATH, folder, `${oldScid}${ext}`);
-                const newPath = path.join(BASE_PATH, folder, `${newScid}${ext}`);
+                const oldPath = path.join(BASE_PATH, folder, `${oldYouthid}${ext}`);
+                const newPath = path.join(BASE_PATH, folder, `${newYouthid}${ext}`);
 
                 try {
                     await fs.rename(oldPath, newPath);
                     results.push({
                         type: folder,
-                        oldName: `${oldScid}${ext}`,
-                        newName: `${newScid}${ext}`,
+                        oldName: `${oldYouthid}${ext}`,
+                        newName: `${newYouthid}${ext}`,
                         success: true,
                     });
                     renamed = true;
@@ -48,8 +48,8 @@ export async function POST(req: NextRequest) {
             if (!renamed) {
                 results.push({
                     type: folder,
-                    oldName: oldScid,
-                    newName: newScid,
+                    oldName: oldYouthid,
+                    newName: newYouthid,
                     success: false,
                     error: "File not found",
                 });

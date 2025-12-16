@@ -13,8 +13,7 @@ import PrintDisabledIcon from '@mui/icons-material/PrintDisabled';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 import SimpleTable from "../../components/customDataListTable";
-import { useSeniorCardDataContext } from "@/app/Contexts/SeniorCardContext";
-import { SeniorCardModel } from "@/app/models/SeniorCard/seniorCardModel";
+import { useSeniorCardDataContext } from "@/app/Contexts/CardContext";
 import { PrintButton } from "./components/cardPrint";
 import AddSCModal from "./modal/AddSCModal";
 import EditSCModal from "./modal/EditSCModal";
@@ -22,15 +21,16 @@ import ViewSCModal from "./modal/ViewSCModal";
 import { ConfirmationModal } from "./modal/ConfirmationModal";
 import CloseIcon from '@mui/icons-material/Close';
 import { useStateContext } from "@/app/Contexts/stateContext";
+import { YouthCardModel } from "@/app/models/SeniorCard/youthCardModel";
 
 const columns: {
-    accessorKey: keyof SeniorCardModel;
+    accessorKey: keyof YouthCardModel;
     header: string;
-    renderCell?: (value: any, row: Partial<SeniorCardModel>) => React.ReactNode;
+    renderCell?: (value: any, row: Partial<YouthCardModel>) => React.ReactNode;
 }[] = [
         {
-            accessorKey: "scid",
-            header: "SCID",
+        accessorKey: "youthid",
+            header: "YouthID",
             renderCell: (value: string) => (
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1, px: 1 }}>
                     <NumbersIcon fontSize="small" />
@@ -50,11 +50,11 @@ const columns: {
         },
         {
             accessorKey: "status",
-            header: "Status",
+            header: "Print Status",
             renderCell: (value, row) => (
                 <Box display="flex" alignItems="center" gap={1}>
                     {value === "PRINTED" ? <CheckCircleIcon color="success" /> : <CancelIcon color="error" />}
-                    <Typography variant="body2">{value}</Typography>
+                    {/* <Typography variant="body2">{value}</Typography> */}
                 </Box>
             ),
         }
@@ -80,7 +80,7 @@ export default function SeniorCard() {
     const [selectedSCID, setSelectedSCID] = useState<string | null>(null);
 
     const queryRef = useRef<HTMLInputElement | null>(null);
-    const printRef = useRef<{ handlePrint: (rowData: SeniorCardModel) => void }>(null);
+    const printRef = useRef<{ handlePrint: (rowData: YouthCardModel) => void }>(null);
 
     const [query, setQuery] = useState("");
 
@@ -88,7 +88,7 @@ export default function SeniorCard() {
         await searchSCData(query);
     };
 
-    const handleOpenModal = (type: keyof ModalState, row?: Partial<SeniorCardModel>) => {
+    const handleOpenModal = (type: keyof ModalState, row?: Partial<YouthCardModel>) => {
         setModals({ add: false, edit: false, view: false, [type]: true });
         if ((type === "edit" || type === "view") && row) {
             setSelectedSCData(row);
@@ -115,10 +115,10 @@ export default function SeniorCard() {
         setModals(prev => ({ ...prev, [type]: false }));
     };
 
-    const handlePrint = (data: Partial<SeniorCardModel>) => {
+    const handlePrint = (data: Partial<YouthCardModel>) => {
         setSelectedSCData(data);
-        setTimeout(() => printRef.current?.handlePrint(data as SeniorCardModel), 100);
-        // printRef.current?.handlePrint(data as SeniorCardModel);        
+        setTimeout(() => printRef.current?.handlePrint(data as YouthCardModel), 100);
+        // printRef.current?.handlePrint(data as YouthCardModel);        
     };
 
     const handleDelete = async () => {
@@ -164,7 +164,7 @@ export default function SeniorCard() {
 
 
 
-    const renderActions = (row: Partial<SeniorCardModel>) => (
+    const renderActions = (row: Partial<YouthCardModel>) => (
         <Box>
             <Tooltip title="View">
                 <IconButton onClick={() => handleOpenModal("view", row)}>
@@ -179,7 +179,7 @@ export default function SeniorCard() {
             <Tooltip title="Delete">
                 <IconButton
                     onClick={() => {
-                        setSelectedSCID(row.scid || null);
+                        setSelectedSCID(row.youthid || null);
                         setConfirmOpen(true);
                     }}
                 >
@@ -194,7 +194,7 @@ export default function SeniorCard() {
             <Tooltip title="Revert Print Status">
                 <IconButton
                     onClick={() => {
-                        setRevertSCID(row.scid || null);
+                        setRevertSCID(row.youthid || null);
                         setRevertConfirmOpen(true);
                     }}
                 >
@@ -206,10 +206,10 @@ export default function SeniorCard() {
 
     return (
         <Box sx={{ p: 2, display: "flex", flexDirection: "column", gap: 2 }}>
-            <Typography variant="h4" color="text.primary">Senior Card Printing</Typography>
+            <Typography variant="h4" color="text.primary">Youth Card Printing</Typography>
             <Divider sx={{ mb: 2 }} />
             <Typography variant="body2" color="text.primary">
-                Manage Senior Card IDs — view details, make updates, and print copies.
+                Manage Card IDs — view details, make updates, and print copies.
             </Typography>
 
             <Box sx={{ display: "flex", flexDirection: "row", gap: 1, alignItems: "center" }}>
@@ -221,7 +221,7 @@ export default function SeniorCard() {
                     startIcon={<AddIcon />}
                     onClick={() => { handleOpenModal("add"); handleClearImages() }}
                 >
-                    New SCID
+                    New
                 </Button>
                 <TextField
                     value={query}
@@ -236,7 +236,7 @@ export default function SeniorCard() {
                             await searchSCData("");   // Trigger search with empty string
                         }
                     }}
-                    placeholder="Search SCID, Name, or Address"
+                    placeholder="Search ID, Name, or Address"
                     variant="outlined"
                     fullWidth
                     InputProps={{

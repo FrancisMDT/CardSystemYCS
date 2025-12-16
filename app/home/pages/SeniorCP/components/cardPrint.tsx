@@ -10,14 +10,14 @@ import Image from "next/image";
 import { QRCode } from "react-qrcode-logo";
 import { useReactToPrint } from "react-to-print";
 import { Box, Paper, Typography } from "@mui/material";
-import { SeniorCardModel } from "@/app/models/SeniorCard/seniorCardModel";
 import { useLoading } from "@/app/Contexts/LoadingContext";
-import { useSeniorCardDataContext } from "@/app/Contexts/SeniorCardContext";
+import { useSeniorCardDataContext } from "@/app/Contexts/CardContext";
 import FrontCard from "./FrontCard";
 import BackCard from "./BackCard";
+import { YouthCardModel } from "@/app/models/SeniorCard/youthCardModel";
 
 export const PrintButton = forwardRef<any, any>((_, ref) => {
-    const [printData, setPrintData] = useState<SeniorCardModel | null>(null);
+    const [printData, setPrintData] = useState<YouthCardModel | null>(null);
     const componentRef = useRef<HTMLDivElement | null>(null);
     const [photoUrl, setPhotoUrl] = useState<string | null>(null); // objectURL or null
     const [signatureUrl, setSignatureUrl] = useState<string | null>(null); // objectURL or null
@@ -55,8 +55,8 @@ export const PrintButton = forwardRef<any, any>((_, ref) => {
             }
             `,
         onAfterPrint: () => {
-            if (selectedSCData?.scid) {
-                markAsPrinted(selectedSCData?.scid);
+            if (selectedSCData?.youthid) {
+                markAsPrinted(selectedSCData?.youthid);
             }
             else {
                 console.error("selectedSCData.scid is undefined");
@@ -151,15 +151,15 @@ export const PrintButton = forwardRef<any, any>((_, ref) => {
     };
 
     useImperativeHandle(ref, () => ({
-        handlePrint: async (rowData: SeniorCardModel) => {
+        handlePrint: async (rowData: YouthCardModel) => {
             revokeTempObjectUrls();
             setLoading?.(true);
             const photoResult = await fetchImageAsObjectUrl(
-                `/api/scpics/Images/${rowData.scid}`,
+                `/api/youthpics/Images/${rowData.youthid}`,
                 ["jpg", "jpeg", "png"]
             );
             const sigResult = await fetchImageAsObjectUrl(
-                `/api/scpics/Signature/${rowData.scid}`,
+                `/api/youthpics/Signature/${rowData.youthid}`,
                 ["png", "jpg", "jpeg"]
             );
 
@@ -202,6 +202,9 @@ export const PrintButton = forwardRef<any, any>((_, ref) => {
                         selectedSCData={printData}
                         photoUrl={photoUrl}
                         operation="print"
+                        loadingPhoto={false}
+                        signatureUrl={signatureUrl}
+                        loadingSignature={false}
                     />
 
                     {/* Back Page */}

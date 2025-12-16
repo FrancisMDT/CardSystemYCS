@@ -1,9 +1,9 @@
-export const deleteSCDataService = async (opts: { id?: string; scid?: string }): Promise<void> => {
-    if (!opts.id && !opts.scid) {
+export const deleteSCDataService = async (opts: { id?: string; youthid?: string }): Promise<void> => {
+    if (!opts.id && !opts.youthid) {
         throw new Error("Either id or scid must be provided");
     }
 
-    const query = opts.id ? `id=${opts.id}` : `scid=${opts.scid}`;
+    const query = opts.id ? `id=${opts.id}` : `scid=${opts.youthid}`;
     const res = await fetch(`/api/scid?${query}`, {
         method: "DELETE",
     });

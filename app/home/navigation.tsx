@@ -9,7 +9,7 @@ import type { Navigation } from '@toolpad/core';
 import LinkIcon from '@mui/icons-material/Link';
 import TaskIcon from '@mui/icons-material/Task';
 import PersonIcon from '@mui/icons-material/Person';
-import ElderlyIcon from '@mui/icons-material/Elderly';
+import CreditCardIcon from '@mui/icons-material/CreditCard';
 
 export const NAVIGATION: Navigation = [
     {
@@ -18,30 +18,11 @@ export const NAVIGATION: Navigation = [
     },
     {
         segment: 'seniorCard',
-        title: 'Senior Card',
-        icon: <ElderlyIcon />,
+        title: 'Youth Card',
+        icon: <CreditCardIcon />,
     },
     // {
-    //     segment: 'dashboard',
-    //     title: 'Dashboard',
-    //     icon: <DashboardIcon />,
-    // },
-    // {
-    //     segment: 'verification',
-    //     title: 'Verification',
-    //     icon: <TaskIcon />,
-    // },
-    // {
     //     kind: 'divider',
-    // },
-    // {
-    //     segment: 'bind',
-    //     title: 'Binding',
-    //     icon: <LinkIcon />,
-    // },
-    // {
-    //     kind: 'header',
-    //     title: 'Admin',
     // },
     
     {

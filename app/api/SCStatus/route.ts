@@ -3,21 +3,21 @@ import pool from "@/lib/db";
 
 export async function PUT(req: NextRequest) {
     try {
-        const { scid, status } = await req.json();
+        const { youthid, status } = await req.json();
 
-        if (!scid || !status) {
+        if (!youthid || !status) {
             return NextResponse.json(
                 { success: false, message: "Missing scid or status" },
                 { status: 400 }
             );
         }
 
-        await pool.query(`UPDATE tblsc SET Status = ? WHERE SCID = ?`, [status, scid]);
+        await pool.query(`UPDATE tblyouth SET Status = ? WHERE YouthID = ?`, [status, youthid]);
 
         return NextResponse.json({
             success: true,
             message: `Status updated to ${status}`,
-            data: { scid, status },
+            data: { youthid, status },
         });
     } catch (err) {
         console.error("Error updating status:", err);
