@@ -131,6 +131,7 @@ export default function ViewSCModal({ open, onClose }: ViewSCModalProps) {
                                     : undefined
                             )}
                             {detailItem("Address", selectedSCData?.address)}
+                            {detailItem("Affiliation", selectedSCData?.affiliates)}
                             {/* {detailItem("Contact Person", selectedSCData?.contactPerson)}
                             {detailItem("Contact Number", selectedSCData?.contactNum)}
                             {detailItem("Contact Address", selectedSCData?.contactAddress)} */}

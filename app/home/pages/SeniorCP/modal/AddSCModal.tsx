@@ -44,7 +44,7 @@ interface NewSCIDModalProps {
     onClose: () => void;
 }
 
-const Affiliations = [
+export const Affiliations = [
     "Lucena Youth Cultural Organization",
     "Lucena Youth Academic Circle",
     "The Breakfast Club",
@@ -87,11 +87,11 @@ export default function NewSCIDModal({ open, onClose }: NewSCIDModalProps) {
 
     const scidLabel = `LC-YMC-${idNumber.padEnd(6, "_")}`;
 
-    const handleUpload = async () => {
+    const handleUpload = async (imglabel: string) => {
         if (!captured) return alert("No image captured!");
         if (!signature) return alert("No signature captured!");
-        await saveUserImage(captured, `${scidLabel}.jpg`);
-        await saveSignature(signature, `${scidLabel}.png`);
+        await saveUserImage(captured, `${imglabel}.jpg`);
+        await saveSignature(signature, `${imglabel}.png`);
     };
 
     const handleClearAll = () => {
@@ -150,11 +150,11 @@ export default function NewSCIDModal({ open, onClose }: NewSCIDModalProps) {
     const scidComplete = !scidLabel.includes("_");
     const fullNameExists = compiledFullName.trim().length > 0;
     const addressExists = compiledAddress.trim().length > 0;
-    const canConfirm = scidComplete && fullNameExists && addressExists && !scidExists;
+    const canConfirm = fullNameExists && addressExists && !scidExists && birthDate;
 
     const handleConfirm = async () => {
         const newSCData: Partial<YouthCardModel> = {
-            youthid: scidLabel,
+            // youthid: scidLabel,
             fullName: compiledFullName.toUpperCase(),
             birthDate,
             address: compiledAddress.toUpperCase(),
@@ -166,8 +166,10 @@ export default function NewSCIDModal({ open, onClose }: NewSCIDModalProps) {
         };
         try {
             console.log("New SC Data to add:", newSCData);
-            await addSCData(newSCData);
-            if (captured && signature) await handleUpload();
+            const result = await addSCData(newSCData);
+            console.log("Add SC Data result:", result);
+            if(result?.toString())
+            if (captured && signature) await handleUpload(result?.toString());
             handleClearAll();
             onClose();
         } catch (err) {
@@ -235,77 +237,10 @@ export default function NewSCIDModal({ open, onClose }: NewSCIDModalProps) {
                         <Box
                             sx={{
                                 display: "flex",
-                                flexDirection: { xs: "column", md: "row" },
+                                flexDirection: { xs: "column", md: "row" },                                
                                 gap: { xs: 2, md: 4 },
                             }}
-                        >
-                            {/* SCID Info */}
-                            <Box sx={{ flexGrow: 1 }}>
-                                <Typography variant="subtitle2">SCID</Typography>
-                                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                    <Typography variant="h6">{scidLabel}</Typography>
-                                    {checkSCID && idNumber && scidExists !== null && (
-                                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                                            {scidExists ? (
-                                                <>
-                                                    <CancelIcon color="error" fontSize="small" />
-                                                    <Typography variant="subtitle1" color="error.main">YouthID already exists</Typography>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <CheckCircleIcon color="success" fontSize="small" />
-                                                        <Typography variant="subtitle1" color="success.main">YouthID available</Typography>
-                                                </>
-                                            )}
-                                        </Box>
-                                    )}
-                                </Box>
-                                <FormControl sx={{ gap: 2, mt: 1 }}>
-                                    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                                        <TextField
-                                            label="6-digit ID"
-                                            value={idNumber}
-                                            onChange={(e) => {
-                                                let input = e.target.value.replace(/\D/g, "").slice(-6);
-                                                setIdNumber(input.padStart(6, "0"));
-                                            }}
-                                            onKeyDown={(e) => {
-                                                if (e.shiftKey && e.key.toLowerCase() === "s") {
-                                                    e.preventDefault();
-                                                    setIdNumber("");
-                                                }
-                                            }}
-                                            inputProps={{ style: { textTransform: "uppercase", textAlign: "center" } }}
-                                            InputProps={{
-                                                endAdornment: idNumber ? (
-                                                    <InputAdornment position="end">
-                                                        <IconButton
-                                                            onClick={() => setIdNumber("")}
-                                                            size="small"
-                                                            edge="end"
-                                                        >
-                                                            <ClearIcon fontSize="small" />
-                                                        </IconButton>
-                                                    </InputAdornment>
-                                                ) : null,
-                                            }}
-                                        />                  
-                                        <FormControlLabel
-                                            // labelPlacement="start"
-                                            control={
-                                                <Checkbox
-                                                    checked={checkSCID}
-                                                    onChange={(e) => setCheckSCID(e.target.checked)}
-                                                    color="primary"
-
-                                                />
-                                            }
-                                            label="Check YouthID"
-                                        />                      
-                                    </Box>
-                                </FormControl>
-                            </Box>
-
+                        >                           
                             {/* Picture & Signature */}
                             <Box
                                 sx={{

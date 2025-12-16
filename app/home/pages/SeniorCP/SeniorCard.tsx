@@ -22,6 +22,7 @@ import { ConfirmationModal } from "./modal/ConfirmationModal";
 import CloseIcon from '@mui/icons-material/Close';
 import { useStateContext } from "@/app/Contexts/stateContext";
 import { YouthCardModel } from "@/app/models/SeniorCard/youthCardModel";
+import GroupsIcon from '@mui/icons-material/Groups';
 
 const columns: {
     accessorKey: keyof YouthCardModel;
@@ -44,6 +45,16 @@ const columns: {
             renderCell: (value: string) => (
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1, px: 1 }}>
                     <PersonIcon fontSize="small" />
+                    <Typography>{value}</Typography>
+                </Box>
+            ),
+        },
+        {
+            accessorKey: "affiliates",
+            header: "Affiliation",
+            renderCell: (value: string) => (
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1, px: 1 }}>
+                    <GroupsIcon fontSize="small" />
                     <Typography>{value}</Typography>
                 </Box>
             ),

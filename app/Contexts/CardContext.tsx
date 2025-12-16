@@ -1,17 +1,19 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
-import { searchSeniorCards } from "../services/seniorCardServices/searchService";
-import { addSCDataService } from "../services/seniorCardServices/addService";
-import { deleteSCDataService } from "../services/seniorCardServices/deleteService";
-import { editSCDataService } from "../services/seniorCardServices/editService";
+import { searchSeniorCards } from "../services/cardServices/searchService";
+import { addSCDataService } from "../services/cardServices/addService";
+import { deleteSCDataService } from "../services/cardServices/deleteService";
+import { editSCDataService } from "../services/cardServices/editService";
 import { useSnackBar } from "./snackBarContext";
-import { updateSCStatus } from "../services/seniorCardServices/SCStatusService";
-import { searchVLService } from "../services/seniorCardServices/SearchVLService";
-import { checkSCIDExists } from "../services/seniorCardServices/SCIDCheckService";
+import { updateSCStatus } from "../services/cardServices/SCStatusService";
+import { searchVLService } from "../services/cardServices/SearchVLService";
+import { checkSCIDExists } from "../services/cardServices/SCIDCheckService";
 import { renameScidFiles } from "../services/imageServices/editImageNameService";
 import { deleteImages } from "../services/imageServices/deleteImagesService";
 import { VLSearchResult, YouthCardModel } from "../models/SeniorCard/youthCardModel";
+import { generateYouthId } from "@/lib/generateYouthId";
+import { generateYouthIdService } from "../services/cardServices/generateYouthIdService";
 
 type SeniorCardContextType = {
     SCData: Partial<YouthCardModel>[];
@@ -20,7 +22,7 @@ type SeniorCardContextType = {
     loading: boolean;
     searchSCData: (query: string) => Promise<void>;
     selectSCData: (sc: Partial<YouthCardModel> | null) => void;
-    addSCData: (data: Partial<YouthCardModel>) => Promise<void>;
+    addSCData: (data: Partial<YouthCardModel>) => Promise<string | undefined>;
     editSCData: (data: Partial<YouthCardModel>) => Promise<void>;
     deleteSCData: (youthid: string) => Promise<void>;
 
@@ -40,7 +42,7 @@ type SeniorCardContextType = {
 
     canEditSCID: boolean;
     setCanEditSCID: React.Dispatch<React.SetStateAction<boolean>>;
-    fetchYouthIDMetadata: () => Promise<void>;
+    fetchYouthIDMetadata: () => Promise<void>;    
 };
 
 const SeniorCardDataContext = createContext<SeniorCardContextType | undefined>(undefined);
@@ -97,7 +99,6 @@ export const SeniorCardDataProvider = ({ children }: { children: ReactNode }) =>
 
     // Refresh function
     const refreshSCData = async () => {
-        if (!currentQuery) return; // no query, nothing to refresh
         setLoading(true);
         try {
             const results = await searchSeniorCards(currentQuery);
@@ -117,16 +118,24 @@ export const SeniorCardDataProvider = ({ children }: { children: ReactNode }) =>
     const addSCData = async (data: Partial<YouthCardModel>) => {
         setLoading(true);
         try {
+            
             const newEntry = await addSCDataService(data);
-            setSCData(prev => [newEntry, ...prev]);
+            refreshSCData();
+
+            console.log("New SCData added:", newEntry);
+            setSCData(prev => [newEntry, ...prev.filter(sc => sc.youthid !== newEntry.youthid)]);
+
+            showSnackBar("SCData added successfully", "success");
+            return newEntry.youthid;
         } catch (err: unknown) {
+            console.error(err);
             showSnackBar(`Failed to add SCData: ${(err as Error)?.message ?? "Unknown error"}`, "error");
         } finally {
             setLoading(false);
-            showSnackBar("SCData added successfully", "success");
-            refreshSCData();
+            refreshSCData();            
         }
     };
+
 
     const editSCData = async (
         data: Partial<YouthCardModel> & { oldYouthid?: string; newYouthid?: string }
@@ -185,8 +194,6 @@ export const SeniorCardDataProvider = ({ children }: { children: ReactNode }) =>
         }
     };
 
-
-
     const markAsPrinted = async (youthid: string) => {
         setLoading(true);
         try {
@@ -195,7 +202,11 @@ export const SeniorCardDataProvider = ({ children }: { children: ReactNode }) =>
 
             // Update your local state
             setSCData(prev =>
-                prev.map(sc => (sc.youthid === updated.youthid ? updated : sc))
+                prev.map(sc =>
+                    sc.youthid === updated.youthid
+                        ? { ...sc, status: updated.status } // only update status
+                        : sc
+                )
             );
 
             showSnackBar(`YID ${youthid} marked as PRINTED`, "success");
@@ -205,8 +216,7 @@ export const SeniorCardDataProvider = ({ children }: { children: ReactNode }) =>
                 `Failed to mark SC as PRINTED: ${(err as Error)?.message ?? "Unknown error"}`,
                 "error"
             );
-        } finally {
-            showSnackBar(`YID ${youthid} marked as PRINTED`, "success");
+        } finally {            
             setLoading(false);
             refreshSCData();
         }
@@ -216,9 +226,15 @@ export const SeniorCardDataProvider = ({ children }: { children: ReactNode }) =>
         setLoading(true);
         try {
             const updated = await updateSCStatus({ youthid, status: "ID" });
+
             setSCData(prev =>
-                prev.map(sc => (sc.youthid === updated.youthid ? updated : sc))
+                prev.map(sc =>
+                    sc.youthid === updated.youthid
+                        ? { ...sc, status: updated.status }
+                        : sc
+                )
             );
+
             showSnackBar(`SC ${youthid} reverted to ID`, "success");
         } catch (err) {
             console.error("Error reverting SC status:", err);
@@ -226,25 +242,12 @@ export const SeniorCardDataProvider = ({ children }: { children: ReactNode }) =>
                 `Failed to revert SC status: ${(err as Error)?.message ?? "Unknown error"}`,
                 "error"
             );
-        } finally {
-            showSnackBar(`SC ${youthid} reverted to ID`, "success");
+        } finally {            
             setLoading(false);
             refreshSCData();
         }
     };
 
-    // async function handleScidUpdate(oldYouthid: string, newYouthid: string) {
-    //     try {
-    //         const result = await renameScidFiles(oldYouthid, newYouthid);
-    //         if (result.success) {
-    //             console.log("Rename results:", result.results);
-    //         } else {
-    //             console.error("Rename failed:", result);
-    //         }
-    //     } catch (error) {
-    //         console.error("Rename service error:", error);
-    //     }
-    // }
 
     const fetchYouthIDMetadata = async () => {
         try {
@@ -256,6 +259,22 @@ export const SeniorCardDataProvider = ({ children }: { children: ReactNode }) =>
             setCanEditSCID(false);
         }
     };
+
+    const generateNewYouthId = async () => {
+        setLoading(true)
+        try {
+            const youthId = await generateYouthIdService()
+            if (youthId) setIdNumber(youthId)
+            return youthId
+        } catch (err) {
+            showSnackBar('Failed to generate YouthID', 'error')
+            return null
+        } finally {
+            setLoading(false)
+        }
+    }
+
+
 
     useEffect(() => {
         fetchYouthIDMetadata();

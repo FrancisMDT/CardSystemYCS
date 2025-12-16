@@ -14,6 +14,7 @@ import {
     InputAdornment,
     FormControlLabel,
     Checkbox,
+    MenuItem,
 } from "@mui/material";
 import { useSeniorCardDataContext } from "@/app/Contexts/CardContext";
 import FaceCropModal from "../components/imageCrop";
@@ -24,11 +25,18 @@ import { CircularProgress } from "@mui/material";
 import { useSnackBar } from "@/app/Contexts/snackBarContext";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel"
+import { BARANGAYS } from "../components/barangay";
+import { Affiliations } from "./AddSCModal";
+import { inputField } from "../components/inputField";
 
 interface EditSCModalProps {
     open: boolean;
     onClose: () => void;
 }
+
+const BARANGAYS_LOOKUP: Record<string, string> = Object.fromEntries(
+    BARANGAYS.map(b => [b.name.toLowerCase(), b.code])
+);
 
 export default function EditSCModal({ open, onClose }: EditSCModalProps) {
     const { editSCData, selectedSCData, canEditSCID, verifySCID } = useSeniorCardDataContext();
@@ -56,6 +64,30 @@ export default function EditSCModal({ open, onClose }: EditSCModalProps) {
 
     const [originalData, setOriginalData] = useState<any>(null);
     const [suppressVerify, setSuppressVerify] = useState(false);
+
+    const [overrideBarangay, setOverrideBarangay] = useState(false);
+    const [barangayCode, setBarangayCode] = useState(
+        BARANGAYS_LOOKUP[selectedSCData?.barangay?.toLowerCase() || ""] || ""
+    );
+
+    const [selectedAffiliation, setSelectedAffiliation] = useState(
+        selectedSCData?.affiliates || ""
+    );
+
+    useEffect(() => {
+        if (!selectedSCData || overrideBarangay) return;
+
+        // Get the barangay name from the code
+        const selectedBarangay = BARANGAYS.find(b => b.code === barangayCode)?.name;
+        if (!selectedBarangay) return;
+
+        // Update only the BRGY. part of the address
+        setAddress(prev => {
+            // Regex to match "BRGY. ..." in the address
+            const newAddress = prev.replace(/BRGY\.\s*[^,]+/i, selectedBarangay);
+            return newAddress.includes("BRGY.") ? newAddress : `${prev}, ${selectedBarangay}`;
+        });
+    }, [barangayCode, overrideBarangay]);
 
 
 
@@ -89,6 +121,10 @@ export default function EditSCModal({ open, onClose }: EditSCModalProps) {
         setContactPerson(selectedSCData.contactPerson || "");
         setContactNum(selectedSCData.contactNum || "");
         setContactAddress(selectedSCData.contactAddress || "");
+        const code = BARANGAYS_LOOKUP[selectedSCData.barangay?.toLowerCase() || ""] || "";
+        setBarangayCode(code);
+
+        setSelectedAffiliation(selectedSCData.affiliates || "");
 
         const loadImages = async () => {
             setPhotoLoading(true);
@@ -127,7 +163,9 @@ export default function EditSCModal({ open, onClose }: EditSCModalProps) {
         setContactPerson(originalData.contactPerson || "");
         setContactNum(originalData.contactNum || "");
         setContactAddress(originalData.contactAddress || "");
-
+        setBarangayCode(
+            BARANGAYS_LOOKUP[originalData.barangay?.toLowerCase() || ""] || ""
+        );
         // Clear any new captures so previews fallback to DB images
         setCaptured("");
         setSignature("");
@@ -226,18 +264,19 @@ export default function EditSCModal({ open, onClose }: EditSCModalProps) {
             return;
         }
 
-
         const updatedData = {
             ...selectedSCData,
             youthid: youthid.toUpperCase(),
             fullName: fullName.toUpperCase(),
             birthDate,
             address: address.toUpperCase(),
+            barangay: BARANGAYS.find(b => b.code === barangayCode)?.name.toUpperCase() || "",
             contactPerson: contactPerson.toUpperCase(),
             contactNum,
             contactAddress: contactAddress.toUpperCase(),
             oldScid: selectedSCData.youthid,   // pass old
             newScid: youthid.toUpperCase(),    // pass new
+            affiliates: selectedAffiliation,
         };
 
         try {
@@ -285,34 +324,6 @@ export default function EditSCModal({ open, onClose }: EditSCModalProps) {
         }
     };
 
-
-    // input helper with optional uppercase
-    const inputField = (
-        label: string,
-        value: string,
-        onChange?: (val: string) => void,
-        readOnly = false,
-        forceUppercase = false
-    ) => (
-        <TextField
-            label={label}
-            value={value}
-            onChange={
-                onChange
-                    ? (e) => {
-                        let val = e.target.value;
-                        if (forceUppercase) val = val.toUpperCase();
-                        onChange(val);
-                    }
-                    : undefined
-            }
-            fullWidth
-            InputProps={{ readOnly }}
-            InputLabelProps={label === "Birthdate" ? { shrink: true } : undefined}
-            type={label === "Birthdate" ? "date" : "text"}
-        />
-    );
-
     return (
         <Dialog
             open={open}
@@ -338,102 +349,66 @@ export default function EditSCModal({ open, onClose }: EditSCModalProps) {
                     {/* Left: Form Fields */}
                     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                         <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
-                            Senior Details
+                            Youth Details
                         </Typography>
-                        <Box
-                            sx={{
-                                display: "flex",
-                                flexDirection: { xs: "column", sm: "row" }, // stack on mobile
-                                alignItems: "center",
-                                gap: 2,
-                            }}
-                        >
-                            {/* SCID input */}
+
+                        {inputField({
+                            label: "Full Name",
+                            value: fullName,
+                            onChange: setFullName,
+                            forceUppercase: true, // force uppercase
+                        })}
+
+                        {inputField({
+                            label: "Birthdate",
+                            value: birthDate ? new Date(birthDate).toISOString().split("T")[0] : "",
+                            onChange: setBirthDate,
+                        })}
+                        <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, gap: 2 }}>
                             <TextField
-                                label="Youth ID"
-                                value={youthid}
-                                onChange={handleScidInputChange}
+                                select
+                                label="Affiliations"
+                                value={selectedAffiliation}
+                                onChange={(e) => setSelectedAffiliation(e.target.value)}
                                 fullWidth
-                                InputProps={{
-                                    readOnly: !canEditSCID,
-                                    endAdornment:
-                                        canEditSCID &&
-                                            youthid !== selectedSCData?.youthid &&
-                                            youthidValid !== null &&
-                                            !suppressVerify ? (
-                                            <InputAdornment position="end">
-                                                {youthidValid ? (
-                                                    <CheckCircleIcon color="success" />
-                                                ) : (
-                                                    <CancelIcon color="error" />
-                                                )}
-                                            </InputAdornment>
-                                        ) : null,
-                                }}
-                                error={
-                                    canEditSCID &&
-                                    youthid !== selectedSCData?.youthid &&
-                                    (youthidValid === false || youthid.length !== 13)
-                                }
-                                helperText={
-                                    canEditSCID && youthid !== selectedSCData?.youthid
-                                        ? youthid.length !== 13
-                                            ? "Youth ID must be 13 characters"
-                                            : suppressVerify
-                                                ? "Youth ID verification skipped"
-                                                : youthidValid === null
-                                                    ? "Checking Youth ID..."
-                                                    : youthidValid
-                                                        ? "Youth ID is available"
-                                                        : "Youth ID already exists"
-                                        : ""
-                                }
-                                FormHelperTextProps={{
-                                    sx: {
-                                        color:
-                                            youthid.length !== 13
-                                                ? "red"
-                                                : suppressVerify
-                                                    ? "text.secondary"
-                                                    : youthidValid === null
-                                                        ? "text.secondary"
-                                                        : youthidValid
-                                                            ? "green"
-                                                            : "red",
-                                    },
-                                }}
-                            />
-
-
-                            {/* Suppress checkbox */}
-                            <FormControlLabel
-                                sx={{ mt: { xs: 1, sm: 0 } }} // spacing when stacked on mobile
-                                control={
-                                    <Checkbox
-                                        checked={suppressVerify}
-                                        onChange={(e) => setSuppressVerify(e.target.checked)}
-                                    />
-                                }
-                                label="Skip Youth ID Check"
-                            />
+                            >
+                                {Affiliations.map((b) => (
+                                    <MenuItem key={b} value={b}>
+                                        {b}
+                                    </MenuItem>
+                                ))}
+                            </TextField>
                         </Box>
+                        <TextField
+                            select
+                            label="Barangay"
+                            value={barangayCode}
+                            onChange={(e) => setBarangayCode(e.target.value)}
+                            fullWidth
+                        >
+                            {BARANGAYS.map((b) => (
+                                <MenuItem key={b.code} value={b.code}>
+                                    {b.name}
+                                </MenuItem>
+                            ))}
+                        </TextField>
+                        {inputField({
+                            label: "Address",
+                            value: address,
+                            onChange: setAddress,
+                            forceUppercase: true, // force uppercase
+                        })}
 
-                        {inputField("Full Name", fullName, setFullName, false, true)}
-                        {inputField(
-                            "Birthdate",
-                            birthDate ? new Date(birthDate).toISOString().split("T")[0] : "",
-                            setBirthDate
-                        )}
-                        {inputField("Address", address, setAddress, false, true)}
-                        {/* {inputField("Contact Person", contactPerson, setContactPerson, false, true)}
-                        {inputField("Contact Number", contactNum, setContactNum)}
-                        {inputField(
-                            "Contact Address",
-                            contactAddress,
-                            setContactAddress,
-                            false,
-                            true
-                        )} */}
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    checked={overrideBarangay}
+                                    onChange={(e) => setOverrideBarangay(e.target.checked)}
+                                />
+                            }
+                            label="Do not auto-update barangay in address"
+                        />
+                      
                     </Box>
 
                     {/* Right: Preview Section */}

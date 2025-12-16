@@ -16,6 +16,6 @@ export const addSCDataService = async (data: Partial<YouthCardModel>): Promise<P
     }
 
     console.log("result from API:", result);
-    return result.data[0];
+    return result.data;
 };
 

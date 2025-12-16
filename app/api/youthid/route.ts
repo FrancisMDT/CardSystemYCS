@@ -3,6 +3,7 @@ import pool from "@/lib/db";
 import { jwtVerify } from "jose";
 import { v4 as uuidv4 } from "uuid";
 import { YouthCardModel } from "@/app/models/SeniorCard/youthCardModel";
+import { generateYouthId } from "@/lib/generateYouthId";
 
 const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
 const secret = new TextEncoder().encode(JWT_SECRET); // jose requires Uint8Array
@@ -60,6 +61,7 @@ export async function GET(req: NextRequest) {
             fullName: row.Fullname,
             birthDate: row.BirthDate,
             address: row.Address,
+            barangay: row.Barangay,
             contactPerson: row.ContactPerson,
             contactNum: row.ContactNum,
             contactAddress: row.ContactAddress,
@@ -79,35 +81,25 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
     if (!(await verifyToken(req))) {
         return NextResponse.json(
-            { success: false, data: [], message: "Unauthorized" },
+            { success: false, message: "Unauthorized" },
             { status: 401 }
         );
     }
 
     try {
-        const body: YouthCardModel = await req.json();
-        const idExists = await hasIdColumn();
+        const body: Partial<YouthCardModel> = await req.json();
 
-        // Check if YouthID already exists
-        const [existing] = await pool.query(
-            "SELECT YouthID FROM tblyouth WHERE YouthID = ?",
-            [body.youthid]
-        );
-        if (Array.isArray(existing) && existing.length > 0) {
-            return NextResponse.json(
-                { success: false, data: [], message: `YouthID ${body.youthid} already exists` },
-                { status: 400 }
-            );
-        }
+        // Generate next YouthID safely
+        const youthid = await generateYouthId();
 
-        // Insert new record with Status = "not_printed"
+        // Insert full record
         const insertQuery = `
-            INSERT INTO tblyouth
-            (YouthID, Fullname, BirthDate, Address, barangay, ContactPerson, ContactNum, ContactAddress, Status, DateID, Affiliates)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)
-        `;
+      INSERT INTO tblyouth
+      (YouthID, Fullname, BirthDate, Address, Barangay, ContactPerson, ContactNum, ContactAddress, Status, DateID, Affiliates)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)
+    `;
         const insertValues = [
-            body.youthid,
+            youthid,
             body.fullName,
             body.birthDate,
             body.address,
@@ -115,21 +107,22 @@ export async function POST(req: NextRequest) {
             body.contactPerson,
             body.contactNum,
             body.contactAddress,
-            "ID",
+            "ID", // default status
             body.affiliates || "ID",
         ];
 
         await pool.query(insertQuery, insertValues);
 
+        // Return the newly created data
         return NextResponse.json({
             success: true,
-            data: [body],
+            data: { ...body, youthid },
             message: "YouthID added successfully",
         });
-    } catch (err) {
+    } catch (err: any) {
         console.error("Insert error:", err);
         return NextResponse.json(
-            { success: false, data: [], message: `Server error: ${err}` },
+            { success: false, message: err.message || "Failed to add YouthID" },
             { status: 500 }
         );
     }
@@ -156,7 +149,7 @@ export async function PUT(req: NextRequest) {
             // YouthID can be edited, use id as key
             await pool.query(
                 `UPDATE tblyouth
-                 SET YouthID = ?, Fullname = ?, BirthDate = ?, Address = ?, Barangay = ?, ContactPerson = ?, ContactNum = ?, ContactAddress = ?, Status = ?, DateID = ?
+                 SET YouthID = ?, Fullname = ?, BirthDate = ?, Address = ?, Barangay = ?, ContactPerson = ?, ContactNum = ?, ContactAddress = ?, Status = ?, DateID = ?, Affiliates = ?
                  WHERE id = ?`,
                 [
                     body.youthid,
@@ -169,6 +162,7 @@ export async function PUT(req: NextRequest) {
                     body.contactAddress,
                     body.status,
                     formatDateForMySQL(body.dateID),
+                    body.affiliates,
                     body.id,
                 ]
             );
@@ -176,7 +170,7 @@ export async function PUT(req: NextRequest) {
             // YouthID cannot be edited
             await pool.query(
                 `UPDATE tblyouth
-                 SET Fullname = ?, BirthDate = ?, Address = ?, Barangay = ?, ContactPerson = ?, ContactNum = ?, ContactAddress = ?, Status = ?, DateID = ?
+                 SET Fullname = ?, BirthDate = ?, Address = ?, Barangay = ?, ContactPerson = ?, ContactNum = ?, ContactAddress = ?, Status = ?, DateID = ?, Affiliates = ?
                  WHERE YouthID = ?`,
                 [
                     body.fullName,
@@ -188,6 +182,7 @@ export async function PUT(req: NextRequest) {
                     body.contactAddress,
                     body.status,
                     formatDateForMySQL(body.dateID),
+                    body.affiliates,
                     body.youthid,
                 ]
             );

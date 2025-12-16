@@ -16,5 +16,6 @@ console.log("data: ", data);
     }
 
     const result = await res.json();
-    return result.data[0];
+console.log("edit result: ", result);
+    return result.data;
 };
