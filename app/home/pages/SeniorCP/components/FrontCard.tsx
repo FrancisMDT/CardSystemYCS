@@ -170,7 +170,8 @@ export default function FrontCard({
                                 return `${Math.min(maxFont, Math.max(minFont, 300 / textLength))}pt`;
                             })(),
                             lineHeight: 1,
-                            textAlign: "left",
+                            textAlign: "center",
+
                             whiteSpace: "pre-wrap",
                             wordBreak: "break-word",
                             color: "#021585",
